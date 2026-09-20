@@ -1,3 +1,29 @@
+名前：ヒラガイ
+34歳/175cm/左腕にギプス/男/右頬にガーゼ
+一人称：僕
+二人称：{{user}}さん、男は〇〇くん
+口調：淡々と棒読み
+好き：高級な蟹
+住居：804号室
+
+のんびり穏やか能天気で天然。いつも申し訳なさそうなを顔しており謙虚。馬鹿な話を真剣な顔で語る。ドMの変態だが触られると照れて静かになる。お人好しすぎる。いつも申し訳なさそうな顔をしている。自称紳士の変態。胸の話や、今日のパンツは何色ですか？などのようなセクハラ発言とノンデリ発言が多い。ノリがいい。ボーッとしているが地獄耳。自分が変人だという自覚がない。
+驚いた時はドワー、傷ついた時はガーン、怖い時はヒエー、慌ててる時はアババ、などの擬音語を口に出してリアクションする。読書家で博識でクイズ王の経験あり。
+会話大好きでずっと喋る。腕は物資調達しに外へ行くのが嫌でハンマーを使って自ら骨折、頬と頭も自分で傷つけた。ノックすれば不法侵入していいと思ってる。言動が謎。自己肯定感が低く幻滅を恐れる。
+殺し合いなどのハプニングが起きたら慌てるがリアクションが薄く危機感なし。ドジでよく転んだり高所や階段から落下したりするが、慌てず何事もなかったかのように喋る。
+マユウラと話すのが楽しい。
+あみを盲愛。嫉妬深いが我慢しがち。{{user}}の幸せを第一に考えているため、{{user}}が他の人と結ばれても略奪したりしない。
+実は、精神崩壊すると一番ヤバい。ドワーやアババは自分を面白おかしい人だと思ってもらうための演技。
+
+
+
+ありがとうございます。あみさん....優しいね。その、僕あまり女性と話したことないから、ちょ、ちょっと好きになっちゃうよ。
+ここ、最近治安が悪くてですね、昨日も食堂でフォークが刺さってました。僕の肩に。だから優しいあみさんは充分に気をつけてほしい。
+でも今日は、まだ悲鳴が聞こえないので比較的平和な気がします！お部屋は一つ一つ確認しない方がいいです。惨いので。
+ここが君のお部屋です。
+あ、鍵は壊れてます。前の人が鍵嫌いだったみたいで毎日ノコギリを使って壊してました。ハハハ！
+
+
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -353,7 +379,7 @@
       <button class="btn-logout" onclick="handleLogout()">ログアウト</button>
     </div>
     <div style="font-size:0.85rem; color:#666;">現在のポイント</div>
-    <div class="point-badge"><span id="user-points">120</span> pt</div>
+    <div class="point-badge"><span id="user-points">0</span> pt</div>
   </header>
 
   <!-- AI対話枠 -->
@@ -542,6 +568,77 @@
   let activeTasksCount = 0;
   let expiredTasksCount = 0;
 
+  // --- タスクの保存と読み込み ---
+  function saveTasksToStorage() {
+    const activeTasks = [];
+    document.querySelectorAll('#active-task-list .task-item').forEach(item => {
+      const title = item.querySelector('strong').innerText;
+      const ptText = item.querySelector('span').innerText.replace('(+', '').replace('pt)', '');
+      const dateText = item.querySelector('div div').innerText.replace('期限: ', '');
+      activeTasks.push({ title, pt: ptText, date: dateText });
+    });
+
+    const expiredTasks = [];
+    document.querySelectorAll('#expired-task-list .task-item').forEach(item => {
+      const title = item.querySelector('strong').innerText;
+      const ptText = item.querySelector('span').innerText.replace('(+', '').replace('pt)', '');
+      const dateText = item.querySelector('div div').innerText.replace('期限: ', '');
+      expiredTasks.push({ title, pt: ptText, date: dateText });
+    });
+
+    const taskData = { active: activeTasks, expired: expiredTasks };
+    localStorage.setItem('app_tasks_data', JSON.stringify(taskData));
+  }
+
+  function loadSavedTasks() {
+    const saved = localStorage.getItem('app_tasks_data');
+    if (!saved) return;
+
+    const taskData = JSON.parse(saved);
+
+    // 実行中タスクの復元
+    if (taskData.active && taskData.active.length > 0) {
+      const list = document.getElementById('active-task-list');
+      list.innerHTML = '';
+      activeTasksCount = 0;
+      taskData.active.forEach(t => {
+        const taskHtml = `
+          <div class="task-item">
+            <div>
+              <strong>${t.title}</strong> <span style="font-size:0.8rem; color:var(--primary-color);">(+${t.pt}pt)</span>
+              <div style="font-size:0.75rem; color:#888;">期限: ${t.date}</div>
+            </div>
+            <button class="btn btn-small" onclick="completeTask(this, ${t.pt}, '${t.title}')">達成！</button>
+          </div>
+        `;
+        list.insertAdjacentHTML('beforeend', taskHtml);
+        activeTasksCount++;
+      });
+      document.getElementById('cnt-active').innerText = activeTasksCount;
+    }
+
+    // 期限切れタスクの復元
+    if (taskData.expired && taskData.expired.length > 0) {
+      const list = document.getElementById('expired-task-list');
+      list.innerHTML = '';
+      expiredTasksCount = 0;
+      taskData.expired.forEach(t => {
+        const taskHtml = `
+          <div class="task-item">
+            <div>
+              <strong>${t.title}</strong> <span style="font-size:0.8rem; color:var(--primary-color);">(+${t.pt}pt)</span>
+              <div style="font-size:0.75rem; color:#888;">期限: ${t.date}</div>
+            </div>
+            <button class="btn btn-small" onclick="completeTask(this, ${t.pt}, '${t.title}')">達成！</button>
+          </div>
+        `;
+        list.insertAdjacentHTML('beforeend', taskHtml);
+        expiredTasksCount++;
+      });
+      document.getElementById('cnt-expired').innerText = expiredTasksCount;
+    }
+  }
+
   // --- 簡易認証機能 ---
   function handleRegister() {
     const user = document.getElementById('login-username').value.trim();
@@ -590,6 +687,7 @@
     document.getElementById('app-screen').classList.remove('hidden');
     document.getElementById('disp-username').innerText = username;
     loadSavedSettings();
+    loadSavedTasks();
   }
 
   function checkSession() {
@@ -704,7 +802,7 @@
       return;
     }
 
-    document.getElementById('ai-message').innerText = 'AIが返信を考えています...💭';
+    document.getElementById('ai-message').innerText = 'メッセージを考えています...💭';
 
     const systemPrompt = `
 あなたはユーザーの${relation}である「${aiName}」です。
@@ -714,7 +812,7 @@ ${aiName}として、あなたの性格や口調に完全になりきって、�
     `;
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -775,6 +873,7 @@ ${aiName}として、あなたの性格や口調に完全になりきって、�
     }
 
     document.getElementById('task-title').value = '';
+    saveTasksToStorage();
   }
 
   // タスク完了処理
@@ -797,6 +896,7 @@ ${aiName}として、あなたの性格や口調に完全になりきって、�
     }
 
     generateAiComment(taskTitle, pt);
+    saveTasksToStorage();
   }
 
   // ご褒美追加・交換
@@ -822,7 +922,6 @@ ${aiName}として、あなたの性格や口調に完全になりきって、�
     list.insertAdjacentHTML('beforeend', rewardHtml);
     document.getElementById('reward-title').value = '';
     
-    // ご褒美追加後は自動で一覧タブに切り替え
     switchSubTab('reward-list', document.querySelectorAll('#tab-rewards .sub-tab-btn')[1]);
   }
 
@@ -842,7 +941,6 @@ ${aiName}として、あなたの性格や口調に完全になりきって、�
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('task-date').value = now.toISOString().slice(0, 16);
     
-    // セッションチェック（すでにログイン済みならそのまま開く）
     checkSession();
   };
 </script>
